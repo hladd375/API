@@ -13,6 +13,8 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
+import javax.sound.midi.Soundbank;
+
 // Program for print data in JSON format.
 public class ReadJson {
     public static void main(String args[]) throws ParseException {
@@ -83,7 +85,8 @@ public class ReadJson {
 
             String name = (String)jsonObject.get("name");
             String mass = (String)jsonObject.get("mass");
-
+            String eyeColor = (String)jsonObject.get("eye_color");
+            String birthYear = (String)jsonObject.get("birth_year");
             org.json.simple.JSONArray msg = (org.json.simple.JSONArray) jsonObject.get("films");
             int n =   msg.size(); //(msg).length();
             for (int i = 0; i < n; ++i) {
@@ -91,9 +94,19 @@ public class ReadJson {
                 System.out.println(test);
                 // System.out.println(person.getInt("key"));
             }
+            org.json.simple.JSONArray starshipsArray = (org.json.simple.JSONArray) jsonObject.get("starships");
+            int s = starshipsArray.size();
+            for (int i = 0; i < s; ++i) {
+                String starships =(String) starshipsArray.get(i);
+                System.out.println("starships: " + starships);
+                // System.out.println(person.getInt("key"));
+            }
             String height= (String)jsonObject.get("height");
             System.out.println(name);
             System.out.println(mass);
+            System.out.println("eye color: " + eyeColor);
+            System.out.println("birth year: " + birthYear);
+
         }
 
         catch (Exception e) {
