@@ -46,7 +46,7 @@ public class ReadJson {
         String totlaJson="";
         try {
 
-            URL url = new URL("https://swapi.dev/api/people/4/");
+            URL url = new URL("https://pokeapi.co/api/v2/pokemon/ditto");
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("GET");
             conn.setRequestProperty("Accept", "application/json");
@@ -84,28 +84,19 @@ public class ReadJson {
         try {
 
             String name = (String)jsonObject.get("name");
-            String mass = (String)jsonObject.get("mass");
-            String eyeColor = (String)jsonObject.get("eye_color");
-            String birthYear = (String)jsonObject.get("birth_year");
-            org.json.simple.JSONArray msg = (org.json.simple.JSONArray) jsonObject.get("films");
-            int n =   msg.size(); //(msg).length();
+            System.out.println("");
+            System.out.println("name: " + name);
+
+            org.json.simple.JSONArray abilities = (org.json.simple.JSONArray) jsonObject.get("abilities");
+            int n =   abilities.size(); //(msg).length();
             for (int i = 0; i < n; ++i) {
-                String test =(String) msg.get(i);
+                JSONObject test =(JSONObject) abilities.get(i);
+                //org.json.simple.JSONObject ability = (org.json.simple.JSONObject) jsonObject.get("ability");
                 System.out.println(test);
+                //System.out.println(ability);
+
                 // System.out.println(person.getInt("key"));
             }
-            org.json.simple.JSONArray starshipsArray = (org.json.simple.JSONArray) jsonObject.get("starships");
-            int s = starshipsArray.size();
-            for (int i = 0; i < s; ++i) {
-                String starships =(String) starshipsArray.get(i);
-                System.out.println("starships: " + starships);
-                // System.out.println(person.getInt("key"));
-            }
-            String height= (String)jsonObject.get("height");
-            System.out.println(name);
-            System.out.println(mass);
-            System.out.println("eye color: " + eyeColor);
-            System.out.println("birth year: " + birthYear);
 
         }
 
