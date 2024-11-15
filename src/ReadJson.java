@@ -1,3 +1,6 @@
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -14,12 +17,27 @@ import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
 import javax.sound.midi.Soundbank;
+import javax.swing.*;
 
 // Program for print data in JSON format.
 public class ReadJson {
+
+    private int WIDTH=800;
+    private int HEIGHT=700;
+    private JFrame mainFrame;
+    private JPanel top;
+    private JPanel middle;
+    private JPanel bottom;
+    private JTextArea name;
+    private JTextArea otherInfo;
+    private JTextArea searchBar;
+    private JButton searchButton;
+    private String totlaJson;
+
     public static void main(String args[]) throws ParseException {
         // In java JSONObject is used to create JSON object
         // which is a subclass of java.util.HashMap.
+
 
         JSONObject file = new JSONObject();
         file.put("Full Name", "Ritu Sharma");
@@ -34,6 +52,7 @@ public class ReadJson {
     }
 
     public ReadJson(){
+        prepareGUI();
         try {
             pull();
         }catch(Exception e){
@@ -41,9 +60,40 @@ public class ReadJson {
         }
     }
 
+    public void prepareGUI (){
+        mainFrame = new JFrame("Read Json");
+        top = new JPanel();
+        middle = new JPanel();
+        middle.setLayout(new GridLayout(0,2));
+        bottom = new JPanel();
+        bottom.setLayout(new GridLayout(0,2));
+        name = new JTextArea();
+        otherInfo = new JTextArea();
+        searchBar = new JTextArea();
+        searchButton = new JButton("Search");
+
+        mainFrame.setSize(WIDTH, HEIGHT);
+        mainFrame.setLayout(new BorderLayout());
+        //mainFrame.add(top);
+        mainFrame.add(middle, BorderLayout.CENTER);
+        mainFrame.add(bottom, BorderLayout.SOUTH);
+        middle.add(name);
+        name.setEditable(false);
+        middle.add(otherInfo);
+        otherInfo.setEditable(false);
+        bottom.add(searchBar);
+        bottom.add(searchButton);
+        searchButton.setActionCommand("SEARCH");
+        searchButton.addActionListener(new ButtonClickListener());
+
+
+
+        mainFrame.setVisible(true);
+    }
+
     public  void pull() throws ParseException {
         String output = "abc";
-        String totlaJson="";
+         totlaJson="";
         try {
 
             URL url = new URL("https://pokeapi.co/api/v2/pokemon/ditto");
@@ -106,6 +156,22 @@ public class ReadJson {
 
 
 
+
+    }
+    private class ButtonClickListener implements ActionListener {
+        public void actionPerformed(ActionEvent e) {
+            String command = e.getActionCommand();
+
+            if (command.equals("SEARCH")) {
+                String searchTerm = searchBar.getText();
+                System.out.println(searchTerm);
+                searching(searchTerm,totlaJson);
+
+            }
+        }
+    }
+    private void searching (String searchTerm, String totlaJson){
+        int indexOfname = totlaJson.indexOf("href=") + 6;
 
     }
 }
