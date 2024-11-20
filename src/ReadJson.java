@@ -33,6 +33,7 @@ public class ReadJson {
     private JTextArea searchBar;
     private JButton searchButton;
     private String totlaJson;
+    private String searchTerm;
 
     public static void main(String args[]) throws ParseException {
         // In java JSONObject is used to create JSON object
@@ -53,11 +54,7 @@ public class ReadJson {
 
     public ReadJson(){
         prepareGUI();
-        try {
-            pull();
-        }catch(Exception e){
-            System.out.println(e);
-        }
+
     }
 
     public void prepareGUI (){
@@ -92,11 +89,17 @@ public class ReadJson {
     }
 
     public  void pull() throws ParseException {
+
+        //int indexOfname = totlaJson.indexOf(searchTerm);
         String output = "abc";
-         totlaJson="";
+        totlaJson="";
+       // System.out.println(indexOfname);
+
+
         try {
 
-            URL url = new URL("https://pokeapi.co/api/v2/pokemon/ditto");
+            String urlInput = "https://pokeapi.co/api/v2/pokemon/" + searchTerm;
+            URL url = new URL(urlInput);
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("GET");
             conn.setRequestProperty("Accept", "application/json");
@@ -136,14 +139,25 @@ public class ReadJson {
             String name = (String)jsonObject.get("name");
             System.out.println("");
             System.out.println("name: " + name);
+            otherInfo.append("Name: " + name + "\n");
 
             org.json.simple.JSONArray abilities = (org.json.simple.JSONArray) jsonObject.get("abilities");
             int n =   abilities.size(); //(msg).length();
+
+            otherInfo.append("Abilities: ");
             for (int i = 0; i < n; ++i) {
                 JSONObject test =(JSONObject) abilities.get(i);
-                //org.json.simple.JSONObject ability = (org.json.simple.JSONObject) jsonObject.get("ability");
                 System.out.println(test);
-                //System.out.println(ability);
+
+                JSONObject ability =(JSONObject) test.get("ability");
+                System.out.println(ability);
+                String abilityName = (String)ability.get("name");
+                System.out.println(abilityName);
+                otherInfo.append(abilityName + " ");
+
+
+
+
 
                 // System.out.println(person.getInt("key"));
             }
@@ -163,17 +177,20 @@ public class ReadJson {
             String command = e.getActionCommand();
 
             if (command.equals("SEARCH")) {
-                String searchTerm = searchBar.getText();
+                searchTerm = searchBar.getText();
                 System.out.println(searchTerm);
-                searching(searchTerm,totlaJson);
+                try {
+                    pull();
+                }catch(Exception r){
+                    System.out.println(r);
+                }
+
+
 
             }
         }
     }
-    private void searching (String searchTerm, String totlaJson){
-        int indexOfname = totlaJson.indexOf("href=") + 6;
 
-    }
 }
 
 
