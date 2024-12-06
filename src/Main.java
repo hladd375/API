@@ -345,6 +345,8 @@ public class Main {
                 }
 
 
+
+
                 playerCardDisplay.revalidate();
                 playerCardDisplay.repaint();
                 houseCardDisplay.revalidate();
