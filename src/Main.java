@@ -7,6 +7,7 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
 
 
 // video to load jar
@@ -35,6 +36,10 @@ public class Main {
     private int houseScore;
     private int pNumCards;
     private int hNumCards;
+    private boolean listingAndShow = false;
+    private boolean twoCardsEqual = false;
+    private boolean splitCheck = false;
+    private JLabel cardImage;
     private String listingCardImage;
     private JPanel bottomButtons;
     private JPanel display;
@@ -46,6 +51,7 @@ public class Main {
     private JButton hit;
     private JButton stick;
     private JButton reset;
+    private JButton split;
 
 
     public static void main(String args[]) throws ParseException {
@@ -62,25 +68,17 @@ public class Main {
         prepareGUI();
         shuffle();
         deal();
-        while (true){
-            System.out.print("");
-            if(playerScore > 21){
-                playerStatusLabel.setText("BUST");
-                break;
-            }
-        }
-
-
-
     }
+
     public void housePlay () throws ParseException {
          playerScore = countCards("player");
         System.out.println("Player Score: " + playerScore);
          houseScore = countCards("house");
         System.out.println("House Score: " + houseScore);
         houseCardDisplay.removeAll();
+        listingAndShow = true;
         listingCardsInPile("house");
-        houseCardDisplay.add(cardImage);
+        listingAndShow = false;
         while(houseScore <= 16) {
             drawACard(1,"house",true);
             houseScore = countCards("house");
@@ -90,7 +88,7 @@ public class Main {
             System.out.println("YOU WIN");
             playerStatusLabel.setText("YOU WIN");
         }
-        if(playerScore<houseScore){
+        if(playerScore<houseScore && houseScore <= 21){
             System.out.println("HOUSE WINS");
             playerStatusLabel.setText("HOUSE WINS");
         }
@@ -143,11 +141,12 @@ public class Main {
         playerStatusLabel = new JTextArea();
 
         bottomButtons = new JPanel();
-        bottomButtons.setLayout(new GridLayout(0,3));
+        bottomButtons.setLayout(new GridLayout(2,3));
 
         hit = new JButton("hit");
         stick = new JButton("stick");
         reset = new JButton("reset");
+        split = new JButton("split");
 
         mainFrame.add(display, BorderLayout.CENTER);
         display.add(houseDisplay);
@@ -167,9 +166,14 @@ public class Main {
         stick.setActionCommand("STICK");
         stick.addActionListener(new ButtonClickListener());
 
+        bottomButtons.add(split);
+        split.setActionCommand("SPLIT");
+        split.addActionListener(new ButtonClickListener());
+
         bottomButtons.add(reset);
         reset.setActionCommand("RESET");
         reset.addActionListener(new ButtonClickListener());
+
 
         mainFrame.setVisible(true);
 
@@ -233,9 +237,16 @@ public class Main {
 
     }
     public void deal() throws ParseException{
+        split.setEnabled(false);
+        splitCheck = true;
         drawACard(2,"player",true);
+        splitCheck = false;
         drawACard(1,"house",false);
         drawACard(1,"house",true);
+        listingCardsInPile("player");
+        if(twoCardsEqual){
+            split.setEnabled(true);
+        }
         playerScore = countCards("player");
         if(playerScore == 21){
             playerStatusLabel.setText("BLACK JACK");
@@ -307,7 +318,7 @@ public class Main {
                 ImageIcon originalbackCardImage =new ImageIcon(new URL(backImage));
                 Image scaledCardImage = originalCardIcon.getImage().getScaledInstance(100, 150, Image.SCALE_SMOOTH);
                 Image scaledBackCardImage = originalbackCardImage.getImage().getScaledInstance(100, 150, Image.SCALE_SMOOTH);
-                JLabel cardImage = new JLabel(new ImageIcon(scaledCardImage));
+                cardImage = new JLabel(new ImageIcon(scaledCardImage));
                 JLabel backCardImage = new JLabel(new ImageIcon(scaledBackCardImage));
 
 
@@ -406,6 +417,8 @@ public class Main {
         isThereAnAce = false;
         cardTotal = 0;
 
+        ArrayList<String> allCardCodes = new ArrayList<>();
+
         try {
 
             String urlInput = "https://deckofcardsapi.com/api/deck/"+deckID+"/pile/"+pileName+"/list/";
@@ -424,9 +437,9 @@ public class Main {
                     (conn.getInputStream())));
 
 
-            //System.out.println("Output from Server .... \n");
+            System.out.println("Output from Server .... \n");
             while ((output = br.readLine()) != null) {
-                //System.out.println(output);
+                System.out.println("Listing Cards Output: " + output);
                 totlaJson+=output;
 
             }
@@ -452,22 +465,33 @@ public class Main {
             JSONObject player =(JSONObject) piles.get(pileName);
             org.json.simple.JSONArray cards = (org.json.simple.JSONArray) player.get("cards");
             int n =   cards.size();//(msg).length();
+
             for (int i = 0; i < n; ++i) {
                 JSONObject card = (JSONObject) cards.get(i);
                 System.out.println("");
                 System.out.println(card);
-                listingCardImage = (String)card.get("image");
-                ImageIcon cardIcon = new ImageIcon(new URL(listingCardImage));
-                JLabel cardImage = new JLabel(new ImageIcon(String.valueOf(cardIcon)));
+                if(listingAndShow){
+                    System.out.println("listing and show = true");
+                    String image = (String) card.get("image");
+                    ImageIcon originalCardIcon = new ImageIcon(new URL(image));
+                    Image scaledCardImage = originalCardIcon.getImage().getScaledInstance(100, 150, Image.SCALE_SMOOTH);
+                    cardImage = new JLabel(new ImageIcon(scaledCardImage));
+                    houseCardDisplay.add(cardImage);
+                }
 
+
+                String code = (String)card.get("code");
+                System.out.println(pileName + code);
                 String value = (String)card.get("value");
-                System.out.println("Value: "+value);
+
+                allCardCodes.add(value);
+                //System.out.println("Value: "+value);
                 if(value.equals("JACK")  || value.equals("QUEEN") || value.equals("KING")){
                     numberValue = 10;
                 } else if (value.equals("ACE")){
                     isThereAnAce = true;
                     numberValue = aceValue;
-                    System.out.println("inside listing cards Ace Value: " + aceValue);
+                    //System.out.println("inside listing cards Ace Value: " + aceValue);
 
                 }else {
                     numberValue = Integer.parseInt(value);
@@ -476,16 +500,38 @@ public class Main {
 
 
 
-
+                playerCardDisplay.revalidate();
+                playerCardDisplay.repaint();
+                houseCardDisplay.revalidate();
+                houseCardDisplay.repaint();
 
 
             }
+            System.out.println("All card codes: " + allCardCodes);
+
+            if (splitCheck){
+                if (allCardCodes.size() > 1) {
+                    for (int i = 0; i < allCardCodes.size(); i++) {
+                        for (int j = i + 1; j < allCardCodes.size(); j++) {
+                            if (allCardCodes.get(i).equals(allCardCodes.get(j))) {
+                                System.out.println("Duplicate codes found: " + allCardCodes.get(i));
+                                twoCardsEqual = true;
+                                split.setEnabled(true);
+
+                            }
+                        }
+                    }
+                }
+            }
+
 
         }
 
         catch (Exception e) {
             e.printStackTrace();
         }
+
+
 
     }
     public void drawingFromPile(String pileName, int count) throws ParseException { String output = "abc";
@@ -558,6 +604,11 @@ public class Main {
                     drawACard(1,"player",true);
                     playerScore = countCards("player");
                     System.out.println("Player Score" + playerScore);
+                    if(playerScore > 21){
+                        playerStatusLabel.setText("BUST");
+                        hit.setEnabled(false);
+                        housePlay();
+                    }
 
 
                 }catch(Exception r){
@@ -570,6 +621,7 @@ public class Main {
             if (command.equals("STICK")) {
 
                 try {
+                    hit.setEnabled(false);
                     housePlay();
 
                 }catch(Exception r){
@@ -580,17 +632,25 @@ public class Main {
 
             }
             if (command.equals("RESET")) {
+                listingAndShow = false;
+                hit.setEnabled(true);
+                System.out.println("Reset was clicked");
 
                 try {
+
+                    playerCardDisplay.removeAll();
+                    playerCardDisplay.revalidate();
+                    playerCardDisplay.repaint();
+                    houseCardDisplay.removeAll();
+                    houseCardDisplay.revalidate();
+                    houseCardDisplay.repaint();
+
                     playerStatusLabel.setText("");
                     System.out.println("P NUM CARDS: " + pNumCards);
                     for(int x = 0; x < pNumCards; ++x){
                         drawingFromPile("player",1);
                         addToPiles("discard");
                         System.out.println("added to discard");
-                        playerCardDisplay.removeAll();
-                        playerCardDisplay.revalidate();
-                        playerCardDisplay.repaint();
 
                     }
                     System.out.println("H Num Card: " + hNumCards);
@@ -598,13 +658,12 @@ public class Main {
                         drawingFromPile("house",1);
                         addToPiles("discard");
                         System.out.println("added to discard");
-                        houseCardDisplay.removeAll();
-                        houseCardDisplay.revalidate();
-                        houseCardDisplay.repaint();
                     }
                     pNumCards = 0;
                     hNumCards = 0;
+
                     deal();
+
                 }catch(Exception r){
                     System.out.println(r);
                 }
@@ -612,6 +671,18 @@ public class Main {
 
 
             }
+            if (command.equals("SPLIT")) {
+
+                try {
+
+                }catch(Exception r){
+
+                }
+
+
+
+            }
+
         }
     }
 
