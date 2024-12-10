@@ -38,6 +38,7 @@ public class Main {
     private int hNumCards;
     private boolean listingAndShow = false;
     private boolean twoCardsEqual = false;
+    private boolean splitWasHit = false;
     private boolean splitCheck = false;
     private JLabel cardImage;
     private String listingCardImage;
@@ -47,6 +48,10 @@ public class Main {
     private JPanel houseCardDisplay;
     private JPanel playerDisplay;
     private JPanel playerCardDisplay;
+    private JPanel splitHand1;
+    private JPanel splitHand2;
+    private JPanel statusLabel;
+    private JTextArea scoreDispay;
     private JTextArea playerStatusLabel;
     private JButton hit;
     private JButton stick;
@@ -140,6 +145,11 @@ public class Main {
         playerCardDisplay.setLayout(new FlowLayout());
         playerStatusLabel = new JTextArea();
 
+        statusLabel = new JPanel();
+        statusLabel.setLayout(new GridLayout(0,2));
+        scoreDispay = new JTextArea();
+
+
         bottomButtons = new JPanel();
         bottomButtons.setLayout(new GridLayout(2,3));
 
@@ -153,7 +163,9 @@ public class Main {
         houseDisplay.add(houseCardDisplay, BorderLayout.CENTER);
         display.add(playerDisplay);
         playerDisplay.add(playerCardDisplay, BorderLayout.CENTER);
-        playerDisplay.add(playerStatusLabel, BorderLayout.SOUTH);
+        playerDisplay.add(statusLabel, BorderLayout.SOUTH);
+        statusLabel.add(playerStatusLabel);
+        statusLabel.add(scoreDispay);
 
 
         mainFrame.add(bottomButtons, BorderLayout.SOUTH);
@@ -238,15 +250,12 @@ public class Main {
     }
     public void deal() throws ParseException{
         split.setEnabled(false);
-        splitCheck = true;
         drawACard(2,"player",true);
-        splitCheck = false;
         drawACard(1,"house",false);
         drawACard(1,"house",true);
+        splitCheck=true;
         listingCardsInPile("player");
-        if(twoCardsEqual){
-            split.setEnabled(true);
-        }
+        splitCheck=false;
         playerScore = countCards("player");
         if(playerScore == 21){
             playerStatusLabel.setText("BLACK JACK");
@@ -345,8 +354,6 @@ public class Main {
                 }
 
 
-
-
                 playerCardDisplay.revalidate();
                 playerCardDisplay.repaint();
                 houseCardDisplay.revalidate();
@@ -419,7 +426,7 @@ public class Main {
         isThereAnAce = false;
         cardTotal = 0;
 
-        ArrayList<String> allCardCodes = new ArrayList<>();
+        ArrayList<Integer> allCardCodes = new ArrayList<>();
 
         try {
 
@@ -478,7 +485,12 @@ public class Main {
                     ImageIcon originalCardIcon = new ImageIcon(new URL(image));
                     Image scaledCardImage = originalCardIcon.getImage().getScaledInstance(100, 150, Image.SCALE_SMOOTH);
                     cardImage = new JLabel(new ImageIcon(scaledCardImage));
-                    houseCardDisplay.add(cardImage);
+                    if (pileName.equals("player")){
+                        playerCardDisplay.add(cardImage);
+                    }
+                    if(pileName.equals("house")){
+                        houseCardDisplay.add(cardImage);
+                    }
                 }
 
 
@@ -486,7 +498,6 @@ public class Main {
                 System.out.println(pileName + code);
                 String value = (String)card.get("value");
 
-                allCardCodes.add(value);
                 //System.out.println("Value: "+value);
                 if(value.equals("JACK")  || value.equals("QUEEN") || value.equals("KING")){
                     numberValue = 10;
@@ -498,6 +509,7 @@ public class Main {
                 }else {
                     numberValue = Integer.parseInt(value);
                 }
+                allCardCodes.add(numberValue);
                 cardTotal = cardTotal + numberValue;
 
 
@@ -676,6 +688,18 @@ public class Main {
             if (command.equals("SPLIT")) {
 
                 try {
+                    drawingFromPile("player",1);
+                    addToPiles("splitHand1");
+                    listingAndShow = true;
+                    listingCardsInPile("splitHand1");
+                    listingAndShow = false;
+                    drawingFromPile("player", 1);
+                    addToPiles("splitHand2");
+                    listingAndShow = true;
+                    listingCardsInPile("splitHand2");
+                    listingAndShow = false;
+
+
 
                 }catch(Exception r){
 
