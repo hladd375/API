@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
+import org.w3c.dom.css.RGBColor;
 
 import javax.swing.*;
 import javax.swing.border.Border;
@@ -36,10 +37,9 @@ public class Main {
     private int houseScore;
     private int pNumCards;
     private int hNumCards;
+    private int totalHScore;
+    private int totalPScore;
     private boolean listingAndShow = false;
-    private boolean twoCardsEqual = false;
-    private boolean splitWasHit = false;
-    private boolean splitCheck = false;
     private JLabel cardImage;
     private String listingCardImage;
     private JPanel bottomButtons;
@@ -48,15 +48,12 @@ public class Main {
     private JPanel houseCardDisplay;
     private JPanel playerDisplay;
     private JPanel playerCardDisplay;
-    private JPanel splitHand1;
-    private JPanel splitHand2;
     private JPanel statusLabel;
     private JTextArea scoreDispay;
     private JTextArea playerStatusLabel;
     private JButton hit;
     private JButton stick;
     private JButton reset;
-    private JButton split;
 
 
     public static void main(String args[]) throws ParseException {
@@ -92,19 +89,26 @@ public class Main {
         if(playerScore>houseScore || houseScore > 21){
             System.out.println("YOU WIN");
             playerStatusLabel.setText("YOU WIN");
+            totalPScore = totalPScore + 1;
+
         }
         if(playerScore<houseScore && houseScore <= 21){
             System.out.println("HOUSE WINS");
             playerStatusLabel.setText("HOUSE WINS");
+            totalHScore = totalHScore + 1;
         }
         if(playerScore > 21){
             System.out.println("BUST");
             playerStatusLabel.setText("BUST");
+            totalHScore = totalHScore + 1;
         }
         if(playerScore==houseScore){
             System.out.println("PUSH TIE GAME");
             playerStatusLabel.setText("PUSH TIE GAME");
+            totalHScore = totalHScore + 1;
+            totalPScore = totalPScore + 1;
         }
+        scoreDispay.setText("Player: " + totalPScore + " House: " + totalHScore);
     }
     public int countCards (String where) throws ParseException {
         cardTotal = 0;
@@ -138,11 +142,13 @@ public class Main {
         houseDisplay.setLayout(new BorderLayout());
         houseCardDisplay = new JPanel();
         houseCardDisplay.setLayout(new FlowLayout());
+        houseCardDisplay.setBackground(Color.getHSBColor(0.31F,0.96F,0.38F));
 
         playerDisplay = new JPanel();
         playerDisplay.setLayout(new BorderLayout());
         playerCardDisplay = new JPanel();
         playerCardDisplay.setLayout(new FlowLayout());
+        playerCardDisplay.setBackground(Color.getHSBColor(0.31F,0.96F,0.38F));
         playerStatusLabel = new JTextArea();
 
         statusLabel = new JPanel();
@@ -156,7 +162,6 @@ public class Main {
         hit = new JButton("hit");
         stick = new JButton("stick");
         reset = new JButton("reset");
-        split = new JButton("split");
 
         mainFrame.add(display, BorderLayout.CENTER);
         display.add(houseDisplay);
@@ -178,9 +183,6 @@ public class Main {
         stick.setActionCommand("STICK");
         stick.addActionListener(new ButtonClickListener());
 
-        bottomButtons.add(split);
-        split.setActionCommand("SPLIT");
-        split.addActionListener(new ButtonClickListener());
 
         bottomButtons.add(reset);
         reset.setActionCommand("RESET");
@@ -249,13 +251,11 @@ public class Main {
 
     }
     public void deal() throws ParseException{
-        split.setEnabled(false);
+
         drawACard(2,"player",true);
         drawACard(1,"house",false);
         drawACard(1,"house",true);
-        splitCheck=true;
         listingCardsInPile("player");
-        splitCheck=false;
         playerScore = countCards("player");
         if(playerScore == 21){
             playerStatusLabel.setText("BLACK JACK");
@@ -269,6 +269,7 @@ public class Main {
         if(where == "player"){
             pNumCards = pNumCards + count;
         }
+
 
 
         try {
@@ -310,7 +311,6 @@ public class Main {
         System.out.println(jsonObject);
 
         try {
-
             org.json.simple.JSONArray cards = (org.json.simple.JSONArray) jsonObject.get("cards");
             int n =   cards.size(); //(msg).length();
             for (int i = 0; i < n; ++i) {
@@ -359,6 +359,12 @@ public class Main {
                 houseCardDisplay.revalidate();
                 houseCardDisplay.repaint();
 
+            }
+            long remaining = (long)jsonObject.get("remaining");
+            System.out.println("remaining: " + remaining);
+
+            if (remaining < 10){
+                shuffle();
             }
 
 
@@ -523,20 +529,6 @@ public class Main {
             }
             System.out.println("All card codes: " + allCardCodes);
 
-            if (splitCheck){
-                if (allCardCodes.size() > 1) {
-                    for (int i = 0; i < allCardCodes.size(); i++) {
-                        for (int j = i + 1; j < allCardCodes.size(); j++) {
-                            if (allCardCodes.get(i).equals(allCardCodes.get(j))) {
-                                System.out.println("Duplicate codes found: " + allCardCodes.get(i));
-                                twoCardsEqual = true;
-                                split.setEnabled(true);
-
-                            }
-                        }
-                    }
-                }
-            }
 
 
         }
@@ -615,14 +607,16 @@ public class Main {
             if (command.equals("HIT")) {
 
                 try {
-                    drawACard(1,"player",true);
-                    playerScore = countCards("player");
-                    System.out.println("Player Score" + playerScore);
-                    if(playerScore > 21){
-                        playerStatusLabel.setText("BUST");
-                        hit.setEnabled(false);
-                        housePlay();
-                    }
+
+                        drawACard(1,"player",true);
+                        playerScore = countCards("player");
+                        System.out.println("Player Score" + playerScore);
+                        if(playerScore > 21){
+                            playerStatusLabel.setText("BUST");
+                            hit.setEnabled(false);
+                            housePlay();
+                        }
+
 
 
                 }catch(Exception r){
@@ -635,8 +629,9 @@ public class Main {
             if (command.equals("STICK")) {
 
                 try {
-                    hit.setEnabled(false);
-                    housePlay();
+                        hit.setEnabled(false);
+                        housePlay();
+
 
                 }catch(Exception r){
                     System.out.println(r);
@@ -685,29 +680,7 @@ public class Main {
 
 
             }
-            if (command.equals("SPLIT")) {
 
-                try {
-                    drawingFromPile("player",1);
-                    addToPiles("splitHand1");
-                    listingAndShow = true;
-                    listingCardsInPile("splitHand1");
-                    listingAndShow = false;
-                    drawingFromPile("player", 1);
-                    addToPiles("splitHand2");
-                    listingAndShow = true;
-                    listingCardsInPile("splitHand2");
-                    listingAndShow = false;
-
-
-
-                }catch(Exception r){
-
-                }
-
-
-
-            }
 
         }
     }
