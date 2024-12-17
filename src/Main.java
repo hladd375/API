@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
 
@@ -22,7 +23,7 @@ import javax.swing.*;
 import javax.swing.border.Border;
 
 // Program for print data in JSON format.
-public class Main {
+public class Main implements ActionListener{
 
     private int WIDTH=800;
     private int HEIGHT=700;
@@ -54,6 +55,9 @@ public class Main {
     private JButton hit;
     private JButton stick;
     private JButton reset;
+    private JMenu games;
+    private JMenuItem blackJack, ginRummy;
+    private JMenuBar mb;
 
 
     public static void main(String args[]) throws ParseException {
@@ -134,6 +138,19 @@ public class Main {
 
         mainFrame.setSize(WIDTH, HEIGHT);
         mainFrame.setLayout(new BorderLayout());
+
+        blackJack = new JMenuItem("Black Jack");
+        ginRummy = new JMenuItem("Gin Rummy");
+        blackJack.addActionListener(this);
+        ginRummy.addActionListener(this);
+        mb = new JMenuBar();
+        games = new JMenu("Games");
+
+        mainFrame.add(mb);
+        mb.add(games);
+        games.add(blackJack);
+        games.add(ginRummy);
+
 
         display = new JPanel();
         display.setLayout(new GridLayout(2,0));
@@ -684,6 +701,20 @@ public class Main {
 
         }
     }
+    public void actionPerformed(ActionEvent e) {
+        if (e.getSource() == blackJack) {
+
+        }
+        if (e.getSource() == ginRummy) {
+
+
+            }
+        }
+
+
+
+
+
 
 }
 
