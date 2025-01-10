@@ -8,6 +8,7 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
+import java.sql.SQLOutput;
 import java.util.ArrayList;
 
 
@@ -42,6 +43,7 @@ public class Main implements ActionListener{
     private int totalPScore;
     private boolean listingAndShow = false;
     private JLabel cardImage;
+    private Long remaining;
     private String listingCardImage;
     private JPanel bottomButtons;
     private JPanel display;
@@ -55,6 +57,7 @@ public class Main implements ActionListener{
     private JButton hit;
     private JButton stick;
     private JButton reset;
+    private JButton reshuffle;
     private JMenu games;
     private JMenuItem blackJack, ginRummy;
     private JMenuBar mb;
@@ -75,8 +78,8 @@ public class Main implements ActionListener{
         shuffle();
         deal();
     }
-
     public void housePlay () throws ParseException {
+        System.out.println("HOUSE PLAYING");
          playerScore = countCards("player");
         System.out.println("Player Score: " + playerScore);
          houseScore = countCards("house");
@@ -113,8 +116,15 @@ public class Main implements ActionListener{
             totalPScore = totalPScore + 1;
         }
         scoreDispay.setText("Player: " + totalPScore + " House: " + totalHScore);
+
+        if(remaining < 10){
+            System.out.println("NEED TO SHUFFLE");
+            playerStatusLabel.setText("NEED TO SHUFFLE");
+            reshuffle.setEnabled(true);
+        }
     }
     public int countCards (String where) throws ParseException {
+        System.out.println("COUNTING CARDS");
         cardTotal = 0;
         listingCardsInPile(where);
         if(isThereAnAce = true && cardTotal > 21){
@@ -146,10 +156,13 @@ public class Main implements ActionListener{
         mb = new JMenuBar();
         games = new JMenu("Games");
 
-        mainFrame.add(mb);
-        mb.add(games);
+
+
         games.add(blackJack);
         games.add(ginRummy);
+        mb.add(games);
+        mainFrame.add(mb);
+        mainFrame.setJMenuBar(mb);
 
 
         display = new JPanel();
@@ -179,6 +192,7 @@ public class Main implements ActionListener{
         hit = new JButton("hit");
         stick = new JButton("stick");
         reset = new JButton("reset");
+        reshuffle = new JButton("re-shuffle");
 
         mainFrame.add(display, BorderLayout.CENTER);
         display.add(houseDisplay);
@@ -204,6 +218,11 @@ public class Main implements ActionListener{
         bottomButtons.add(reset);
         reset.setActionCommand("RESET");
         reset.addActionListener(new ButtonClickListener());
+
+        bottomButtons.add(reshuffle);
+        reshuffle.setActionCommand("RESHUFFLE");
+        reshuffle.addActionListener(new ButtonClickListener());
+        reshuffle.setEnabled(false);
 
 
         mainFrame.setVisible(true);
@@ -257,6 +276,63 @@ public class Main implements ActionListener{
             deckID = (String)jsonObject.get("deck_id");
             System.out.println("");
             System.out.println("deckID: " + deckID);
+            System.out.println("JUST SHUFFLED");
+
+        }
+
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+
+
+
+    }
+    public void reShuffle() throws ParseException {
+        String output = "abc";
+        totlaJson="";
+
+
+        try {
+
+            String urlInput = "https://deckofcardsapi.com/api/deck/" +deckID+ "/shuffle/";
+            URL url = new URL(urlInput);
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+            conn.setRequestProperty("Accept", "application/json");
+
+            if (conn.getResponseCode() != 200) {
+
+                throw new RuntimeException("Failed : HTTP error code : "
+                        + conn.getResponseCode());
+            }
+
+            BufferedReader br = new BufferedReader(new InputStreamReader(
+                    (conn.getInputStream())));
+
+
+            System.out.println("Output from Server .... \n");
+            while ((output = br.readLine()) != null) {
+                System.out.println(output);
+                totlaJson+=output;
+
+            }
+
+            conn.disconnect();
+
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        JSONParser parser = new JSONParser();
+        org.json.simple.JSONObject jsonObject = (org.json.simple.JSONObject) parser.parse(totlaJson);
+        System.out.println(jsonObject);
+
+        try {
+            System.out.println("RESHUFFLED COMPLETE");
+            deal();
 
         }
 
@@ -268,6 +344,7 @@ public class Main implements ActionListener{
 
     }
     public void deal() throws ParseException{
+        System.out.println("DEALING");
 
         drawACard(2,"player",true);
         drawACard(1,"house",false);
@@ -279,6 +356,7 @@ public class Main implements ActionListener{
         }
     }
     public void drawACard(int count, String where, boolean faceup) throws ParseException { String output = "abc";
+        System.out.println("drawing card");
         totlaJson="";
         if(where == "house"){
             hNumCards = hNumCards + count;
@@ -377,12 +455,8 @@ public class Main implements ActionListener{
                 houseCardDisplay.repaint();
 
             }
-            long remaining = (long)jsonObject.get("remaining");
+            remaining = (long)jsonObject.get("remaining");
             System.out.println("remaining: " + remaining);
-
-            if (remaining < 10){
-                shuffle();
-            }
 
 
 
@@ -394,6 +468,7 @@ public class Main implements ActionListener{
 
     }
     public void addToPiles(String pileName) throws ParseException { String output = "abc";
+        System.out.println("ADDING TO PILES");
         totlaJson="";
 
 
@@ -445,6 +520,7 @@ public class Main implements ActionListener{
 
     }
     public void listingCardsInPile(String pileName) throws ParseException { String output = "abc";
+        System.out.println("LISTING CARDS IN PILE");
         totlaJson="";
         isThereAnAce = false;
         cardTotal = 0;
@@ -558,10 +634,14 @@ public class Main implements ActionListener{
 
     }
     public void drawingFromPile(String pileName, int count) throws ParseException { String output = "abc";
+        System.out.println("DRAWING FROM PILE");
         totlaJson="";
 
 
         try {
+            System.out.println("DID: " + deckID);
+            System.out.println("name: " + pileName);
+            System.out.println("count: " + count);
 
             String urlInput = "https://deckofcardsapi.com/api/deck/"+deckID+"/pile/"+pileName+"/draw/?count="+count;
             URL url = new URL(urlInput);
@@ -648,6 +728,20 @@ public class Main implements ActionListener{
                 try {
                         hit.setEnabled(false);
                         housePlay();
+
+
+                }catch(Exception r){
+                    System.out.println(r);
+                }
+
+
+
+            }
+            if (command.equals("RESHUFFLE")) {
+
+                try {
+                    reShuffle();
+                    deal();
 
 
                 }catch(Exception r){
