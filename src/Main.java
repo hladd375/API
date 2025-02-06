@@ -57,7 +57,6 @@ public class Main implements ActionListener{
     private JButton hit;
     private JButton stick;
     private JButton reset;
-    private JButton reshuffle;
     private JMenu games;
     private JMenuItem blackJack, ginRummy;
     private JMenuBar mb;
@@ -118,9 +117,8 @@ public class Main implements ActionListener{
         scoreDispay.setText("Player: " + totalPScore + " House: " + totalHScore);
 
         if(remaining < 10){
-            System.out.println("NEED TO SHUFFLE");
-            playerStatusLabel.setText("NEED TO SHUFFLE");
-            reshuffle.setEnabled(true);
+            System.out.println("OUT OF CARDS | RESTART CODE");
+            playerStatusLabel.setText("OUT OF CARDS | RESTART CODE");
         }
     }
     public int countCards (String where) throws ParseException {
@@ -150,16 +148,15 @@ public class Main implements ActionListener{
         mainFrame.setLayout(new BorderLayout());
 
         blackJack = new JMenuItem("Black Jack");
-        ginRummy = new JMenuItem("Gin Rummy");
+
         blackJack.addActionListener(this);
-        ginRummy.addActionListener(this);
+
         mb = new JMenuBar();
         games = new JMenu("Games");
 
 
 
         games.add(blackJack);
-        games.add(ginRummy);
         mb.add(games);
         mainFrame.add(mb);
         mainFrame.setJMenuBar(mb);
@@ -192,7 +189,6 @@ public class Main implements ActionListener{
         hit = new JButton("hit");
         stick = new JButton("stick");
         reset = new JButton("reset");
-        reshuffle = new JButton("re-shuffle");
 
         mainFrame.add(display, BorderLayout.CENTER);
         display.add(houseDisplay);
@@ -219,10 +215,6 @@ public class Main implements ActionListener{
         reset.setActionCommand("RESET");
         reset.addActionListener(new ButtonClickListener());
 
-        bottomButtons.add(reshuffle);
-        reshuffle.setActionCommand("RESHUFFLE");
-        reshuffle.addActionListener(new ButtonClickListener());
-        reshuffle.setEnabled(false);
 
 
         mainFrame.setVisible(true);
@@ -287,6 +279,7 @@ public class Main implements ActionListener{
 
 
     }
+
     public void reShuffle() throws ParseException {
         String output = "abc";
         totlaJson="";
@@ -345,7 +338,6 @@ public class Main implements ActionListener{
     }
     public void deal() throws ParseException{
         System.out.println("DEALING");
-
         drawACard(2,"player",true);
         drawACard(1,"house",false);
         drawACard(1,"house",true);
@@ -642,8 +634,10 @@ public class Main implements ActionListener{
             System.out.println("DID: " + deckID);
             System.out.println("name: " + pileName);
             System.out.println("count: " + count);
+            System.out.println("Player NUM Cards " + pNumCards);
 
             String urlInput = "https://deckofcardsapi.com/api/deck/"+deckID+"/pile/"+pileName+"/draw/?count="+count;
+            System.out.println("URL INPUT " + urlInput);
             URL url = new URL(urlInput);
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("GET");
@@ -682,12 +676,15 @@ public class Main implements ActionListener{
         try {
             org.json.simple.JSONArray cards = (org.json.simple.JSONArray) jsonObject.get("cards");
             int n =   cards.size(); //(msg).length();
+            System.out.println("How many cards are in player: " + n);
             for (int i = 0; i < n; ++i) {
                 JSONObject card = (JSONObject) cards.get(i);
                 cardCode = (String)card.get("code");
                 System.out.println(cardCode);
 
             }
+
+            System.out.println("GOT FROM PILE");
 
 
         }
@@ -740,8 +737,10 @@ public class Main implements ActionListener{
             if (command.equals("RESHUFFLE")) {
 
                 try {
-                    reShuffle();
+                    System.out.println("Deck used while reshuffle: " + deckID);
+                    shuffle();
                     deal();
+
 
 
                 }catch(Exception r){
@@ -779,6 +778,7 @@ public class Main implements ActionListener{
                         addToPiles("discard");
                         System.out.println("added to discard");
                     }
+
                     pNumCards = 0;
                     hNumCards = 0;
 
